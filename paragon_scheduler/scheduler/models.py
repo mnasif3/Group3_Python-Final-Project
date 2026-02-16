@@ -9,18 +9,27 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
-class Jobs(models.Model):
+class Job(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     job_title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     scheduled_date = models.DateTimeField()
+    note = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.job_title} for {self.client.name}"
 
 class Scheduler(models.Model):
-    job = models.ForeignKey(Jobs, on_delete=models.CASCADE)
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
     scheduled_time = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    completed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Scheduler for {self.job.job_title} at {self.scheduled_time}"
+        return f"{self.job.job_title} - {self.status} at {self.scheduled_time}"
