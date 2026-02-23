@@ -15,6 +15,7 @@ class Job(models.Model):
     description = models.TextField(blank=True)
     scheduled_date = models.DateTimeField()
     note = models.TextField(blank=True)
+    type = models.CharField()
 
     def __str__(self):
         return f"{self.job_title} for {self.client.name}"
@@ -23,7 +24,6 @@ class Scheduler(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('completed', 'Completed'),
-        ('failed', 'Failed'),
     ]
     
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
