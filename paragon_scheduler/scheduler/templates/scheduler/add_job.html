@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Job</title>
+</head>
+<body>
+
+<h1>Add New Job</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+</form>
+
+<a href="/">Back to Home</a>
+
+</body>
+</html>
