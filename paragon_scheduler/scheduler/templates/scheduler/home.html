@@ -8,21 +8,25 @@
 
     <a href="/add-client/">Add Client</a> |
     <a href="/add-job/">Add Job</a> |
-    <a href="/schedule/">Schedule Job</a>
+    <a href="/schedule/">Schedule</a>
 
     <hr>
 
     <h2>Clients</h2>
     <ul>
         {% for client in clients %}
-            <li>{{ client.name }} - {{ client.email }}</li>
+            <li>{{ client.name }} - {{ client.email }} 
+                <a href="{% url 'edit_client' client.id %}">Edit</a>
+            </li>
         {% endfor %}
     </ul>
 
     <h2>Jobs</h2>
     <ul>
         {% for job in jobs %}
-            <li>{{ job.job_title }} for {{ job.client.name }} on {{ job.scheduled_date }}</li>
+            <li>{{ job.job_title }} for {{ job.client.name }} on {{ job.scheduled_date }}
+                <a href="{% url 'edit_job' job.id %}">Edit</a>
+            </li>
         {% endfor %}
     </ul>
 

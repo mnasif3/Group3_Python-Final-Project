@@ -19,7 +19,7 @@ class ClientForm(forms.ModelForm):
             }),
             'phone_number': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Enter phone number (optional)'
+                'placeholder': 'Enter phone number'
             }),
         }
 
@@ -40,7 +40,7 @@ class JobForm(forms.ModelForm):
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
-                'placeholder': 'Enter job description (optional)',
+                'placeholder': 'Enter job description',
                 'rows': 4
             }),
             'scheduled_date': forms.DateTimeInput(attrs={

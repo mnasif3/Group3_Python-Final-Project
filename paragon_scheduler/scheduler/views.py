@@ -1,7 +1,4 @@
-from django.shortcuts import render
-
-# Create your views here.
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Client, Job, Scheduler
 from .forms import ClientForm, JobForm
 
@@ -27,6 +24,17 @@ def add_client(request):
         form = ClientForm()
     return render(request, 'scheduler/add_client.html', {'form': form})
 
+def edit_client(request, client_id):
+    client = get_object_or_404(Client, id=client_id)
+    if request.method == 'POST':
+        form = ClientForm(request.POST, instance=client)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = ClientForm(instance=client)
+    return render(request, 'scheduler/edit_client.html', {'form': form, 'client': client})
+
 def add_job(request):
     if request.method == 'POST':
         form = JobForm(request.POST)
@@ -36,3 +44,18 @@ def add_job(request):
     else:
         form = JobForm()
     return render(request, 'scheduler/add_job.html', {'form': form})
+
+def edit_job(request, job_id):
+    job = get_object_or_404(Job, id=job_id)
+    if request.method == 'POST':
+        form = JobForm(request.POST, instance=job)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = JobForm(instance=job)
+    return render(request, 'scheduler/edit_job.html', {'form': form, 'job': job})
+
+def schedule(request):
+    # Placeholder for scheduling logic
+    return render(request, 'scheduler/schedule.html')
