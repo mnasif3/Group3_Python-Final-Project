@@ -1,0 +1,15 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Jobs — Paragon Scheduler{% endblock %}
+
+{% block content %}
+  <h2>Jobs</h2>
+  <p><a href="{% url 'add_job' %}" class="add-link">+ Add Job</a></p>
+  <ul>
+    {% for job in jobs %}
+      <li>{{ job.job_title }} for {{ job.client.name }} on {{ job.scheduled_date }} <a href="{% url 'edit_job' job.id %}">Edit</a></li>
+    {% empty %}
+      <li>No jobs yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Schedule — Paragon Scheduler{% endblock %}
+
+{% block content %}
+	<h2>Schedule</h2>
+	<ul>
+		{% for s in schedules %}
+			<li>
+				<strong>{{ s.job.job_title }}</strong> — {{ s.scheduled_date }} at {{ s.scheduled_time }}
+				({{ s.status }})
+			</li>
+		{% empty %}
+			<li>No scheduled items.</li>
+		{% endfor %}
+	</ul>
+{% endblock %}

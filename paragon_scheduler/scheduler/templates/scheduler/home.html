@@ -1,41 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Scheduler</title>
-</head>
-<body>
-    <h1>Client Job Scheduler</h1>
+{% extends 'scheduler/base.html' %}
 
-    <a href="/add-client/">Add Client</a> |
-    <a href="/add-job/">Add Job</a> |
-    <a href="/schedule/">Schedule</a>
+{% block title %}Welcome — Paragon Scheduler{% endblock %}
 
-    <hr>
-
-    <h2>Clients</h2>
-    <ul>
-        {% for client in clients %}
-            <li>{{ client.name }} - {{ client.email }} 
-                <a href="{% url 'edit_client' client.id %}">Edit</a>
-            </li>
-        {% endfor %}
-    </ul>
-
-    <h2>Jobs</h2>
-    <ul>
-        {% for job in jobs %}
-            <li>{{ job.job_title }} for {{ job.client.name }} on {{ job.scheduled_date }}
-                <a href="{% url 'edit_job' job.id %}">Edit</a>
-            </li>
-        {% endfor %}
-    </ul>
-
-    <h2>Schedules</h2>
-    <ul>
-        {% for s in schedules %}
-            <li>{{ s.job.job_title }} at {{ s.scheduled_time }} — {{ s.status }}</li>
-        {% endfor %}
-    </ul>
-
-</body>
-</html>
+{% block content %}
+  <h2>Welcome</h2>
+  <p>Use the links in the header to navigate the site.</p>
+  <p>
+    Quick links: <a href="{% url 'clients' %}">Clients</a> · <a href="{% url 'jobs' %}">Jobs</a> · <a href="{% url 'schedule' %}">Schedule</a>
+  </p>
+{% endblock %}

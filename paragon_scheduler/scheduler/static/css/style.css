@@ -1,0 +1,32 @@
+.site-header{background:#1f7a2e;color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:flex-start;gap:18px}
+.site-title{margin:0;font-size:1.25rem}
+.site-title a{color:#fff;background:transparent;padding:0;text-decoration:none}
+.site-title a:hover{text-decoration:underline;color:#ffea67}
+.site-nav{display:flex;gap:12px}
+.site-nav a{color:#ffffff;text-decoration:none;padding:6px 8px;border-radius:6px}
+.site-nav a:hover{background:rgba(255,255,255,0.08);color:#ffea67}
+.add-link{display:inline-block;background:#ffea67;color:#0b3f1a;padding:6px 10px;border-radius:6px;text-decoration:none;font-weight:600}
+.add-link:hover{background:#fde57a}
+.container{max-width:980px;margin:24px auto;padding:0 16px}
+h1,h2{color:#16321a}
+ul{padding-left:1.25rem}
+li{margin-bottom:6px}
+.site-footer{padding:12px 18px;text-align:center;background:#f0f7ef;color:#16321a;margin-top:36px}
+
+/* Layout: make footer sticky at viewport bottom */
+html, body {height:100%;}
+body {display:flex;flex-direction:column;min-height:100vh;margin:0;padding:0;font-family:Segoe UI, Roboto, Arial, sans-serif;background:#ffffff;color:#16321a}
+.container{flex:1}
+.site-title{margin:0;font-size:1.25rem}
+.site-title a{color:#fff;background:transparent;padding:0;text-decoration:none}
+.site-title a:hover{text-decoration:underline;color:#ffea67}
+.site-nav{display:flex;gap:12px}
+.site-nav a{color:#ffffff;text-decoration:none;padding:6px 8px;border-radius:6px}
+.site-nav a:hover{background:rgba(255,255,255,0.08);color:#ffea67}
+.add-link{display:inline-block;background:#ffea67;color:#0b3f1a;padding:6px 10px;border-radius:6px;text-decoration:none;font-weight:600}
+.add-link:hover{background:#fde57a}
+.container{max-width:980px;margin:24px auto;padding:0 16px}
+h1,h2{color:#16321a}
+ul{padding-left:1.25rem}
+li{margin-bottom:6px}
+.site-footer{padding:12px 18px;text-align:center;background:#f0f7ef;color:#16321a;margin-top:36px}

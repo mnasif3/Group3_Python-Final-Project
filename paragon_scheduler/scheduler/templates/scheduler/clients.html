@@ -1,0 +1,15 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Clients — Paragon Scheduler{% endblock %}
+
+{% block content %}
+  <h2>Clients</h2>
+  <p><a href="{% url 'add_client' %}" class="add-link">+ Add Client</a></p>
+  <ul>
+    {% for client in clients %}
+      <li>{{ client.name }} — {{ client.email }} <a href="{% url 'edit_client' client.id %}">Edit</a></li>
+    {% empty %}
+      <li>No clients yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
