@@ -3,15 +3,308 @@
 {% block title %}Schedule — Paragon Scheduler{% endblock %}
 
 {% block content %}
-	<h2>Schedule</h2>
-	<ul>
-		{% for s in schedules %}
-			<li>
-				<strong>{{ s.job.job_title }}</strong> — {{ s.scheduled_date }} at {{ s.scheduled_time }}
-				({{ s.status }})
-			</li>
-		{% empty %}
-			<li>No scheduled items.</li>
-		{% endfor %}
-	</ul>
+		<h2>Schedule</h2>
+		<p>Drag events to move them; click to toggle completed/pending.</p>
+
+		<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+		<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+
+		<style>
+			#calendar { max-width:1100px; margin: 40px auto; min-height: 600px; border: 1px solid #e6e6e6; background: #fff; }
+		</style>
+
+		<div id="calendar"></div>
+
+		<div id="fc-debug" style="display:none"></div>
+
+		<script>
+		console.log('schedule page script start');
+		if (typeof FullCalendar === 'undefined') {
+			console.error('FullCalendar not loaded');
+		} else {
+			console.log('FullCalendar loaded', FullCalendar.Calendar ? 'Calendar OK' : 'Calendar missing');
+		}
+		// test events endpoint
+		fetch('/api/schedules/').then(r => {
+			console.log('schedules endpoint status', r.status);
+			return r.json().catch(e => { console.error('invalid json from schedules', e); return null });
+		}).then(data => {
+			console.log('schedules data', data);
+			if (!data) document.getElementById('fc-debug').textContent = 'No JSON data returned';
+		}).catch(e => console.error('fetch schedules failed', e));
+		function getCookie(name) {
+			let cookieValue = null;
+			if (document.cookie && document.cookie !== '') {
+				const cookies = document.cookie.split(';');
+				for (let i = 0; i < cookies.length; i++) {
+					const cookie = cookies[i].trim();
+					if (cookie.substring(0, name.length + 1) === (name + '=')) {
+						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+						break;
+					}
+				}
+			}
+			return cookieValue;
+		}
+		
+		let calendar = null;
+
+		document.addEventListener('DOMContentLoaded', function() {
+			const csrftoken = getCookie('csrftoken');
+			const calendarEl = document.getElementById('calendar');
+			calendar = new FullCalendar.Calendar(calendarEl, {
+				initialView: 'dayGridMonth',
+				editable: true,
+				selectable: true,
+				headerToolbar: {
+					left: 'prev,next today',
+					center: 'title',
+					right: 'dayGridMonth,timeGridWeek,timeGridDay'
+				},
+				events: '/api/schedules/',
+				eventDrop: function(info) {
+					fetch(`/api/schedules/${info.event.id}/move/`, {
+						method: 'POST',
+						headers: {
+							'X-CSRFToken': csrftoken,
+							'Content-Type': 'application/x-www-form-urlencoded'
+						},
+						body: new URLSearchParams({ start: info.event.start.toISOString() })
+					}).then(resp => {
+						if (!resp.ok) {
+							alert('Failed to move event');
+							info.revert();
+						}
+					}).catch(() => {
+						alert('Network error');
+						info.revert();
+					});
+				},
+				eventClick: function(info) {
+					fetch(`/api/schedules/${info.event.id}/toggle/`, {
+						method: 'POST',
+						headers: {'X-CSRFToken': csrftoken}
+					}).then(r => r.json()).then(data => {
+						if (data.status === 'completed') {
+							info.event.setProp('backgroundColor', '#28a745');
+							info.event.setProp('borderColor', '#28a745');
+						} else {
+							info.event.setProp('backgroundColor', '#007bff');
+							info.event.setProp('borderColor', '#007bff');
+						}
+					}).catch(() => alert('Failed to toggle status'));
+				}
+				,
+				dateClick: function(info) {
+					openScheduleModal(info.dateStr);
+				}
+			});
+
+			calendar.render();
+			console.log('calendar rendered');
+		});
+		</script>
+
+		
+		<!-- Modal UI (inlined) -->
+		<script>
+		const modalHtml = `
+		<div id="fc-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;">
+		  <div id="fc-modal" style="max-width:700px;margin:80px auto;background:#fff;padding:16px;border-radius:6px;">
+		    <button id="fc-modal-close" style="float:right;border:none;background:transparent;font-size:20px;">&times;</button>
+		    <h4 id="fc-modal-title">Schedule for <span id="fc-modal-date"></span></h4>
+		    <div style="display:flex;gap:12px;margin-top:12px;">
+			<div style="flex:1;">
+				<h5>Scheduled Jobs</h5>
+				<div id="fc-scheduled-jobs" style="max-height:140px;overflow:auto;border:1px solid #eee;padding:8px;margin-bottom:8px;"></div>
+				<h5>Unscheduled Jobs</h5>
+				<div id="fc-existing-jobs" style="max-height:140px;overflow:auto;border:1px solid #eee;padding:8px;"></div>
+			</div>
+		      <div style="flex:1;">
+		        <h5>Create Job</h5>
+		        <form id="fc-new-job-form">
+		          <div><label>Title<br><input name="title" required style="width:100%"></label></div>
+		          <div><label>Client<br><select name="client_id" id="fc-client-select" required style="width:100%"></select></label></div>
+		          <div><label>Description<br><textarea name="description" style="width:100%"></textarea></label></div>
+		          <div><label>Time<br><input type="time" id="fc-job-time" value="09:00" /></label></div>
+		          <div style="margin-top:8px"><button type="submit">Create & Schedule</button></div>
+		        </form>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+		`;
+		document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+		const modalOverlay = document.getElementById('fc-modal-overlay');
+		const modalDateEl = document.getElementById('fc-modal-date');
+		const existingJobsEl = document.getElementById('fc-existing-jobs');
+		const clientSelect = document.getElementById('fc-client-select');
+		const newJobForm = document.getElementById('fc-new-job-form');
+		document.getElementById('fc-modal-close').addEventListener('click', () => modalOverlay.style.display='none');
+
+		let selectedDateForModal = null;
+		let isSubmitting = false;
+		let lastSubmissionToken = null;
+		let abortController = null;
+		
+		function generateToken() {
+		  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+		    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+		    return v.toString(16);
+		  });
+		}
+
+		function openScheduleModal(dateStr) {
+		  selectedDateForModal = dateStr;
+		  modalDateEl.textContent = dateStr;
+		  modalOverlay.style.display = 'block';
+  		  // load scheduled jobs for the date and unscheduled jobs
+  		  const scheduledJobsEl = document.getElementById('fc-scheduled-jobs');
+  		  fetch('/api/schedules/').then(r => r.json()).then(events => {
+  		    scheduledJobsEl.innerHTML = '';
+  		    const matches = events.filter(ev => ev.start && ev.start.slice(0,10) === dateStr);
+  		    if (!matches.length) scheduledJobsEl.textContent = 'No scheduled jobs for this date.';
+  		    matches.forEach(ev => {
+  		      const div = document.createElement('div');
+  		      div.style.padding='6px';
+  		      div.style.borderBottom='1px solid #f0f0f0';
+  		      div.innerHTML = `<strong>${ev.title}</strong><div style="font-size:12px;color:#666">${ev.client || ''}</div>`;
+  		      scheduledJobsEl.appendChild(div);
+  		    });
+  		  }).catch(()=>{ scheduledJobsEl.textContent = 'Failed to load scheduled jobs.' });
+
+  		  // unscheduled jobs
+  		  fetch('/api/jobs/').then(r => r.json()).then(data => {
+  		    existingJobsEl.innerHTML = '';
+  		    if (!data.length) existingJobsEl.textContent = 'No scheduled jobs.';
+  		    data.forEach(j => {
+  		      const div = document.createElement('div');
+  		      div.style.padding='6px';
+  		      div.style.borderBottom='1px solid #f0f0f0';
+  		      div.innerHTML = `<strong>${j.title}</strong><div style="font-size:12px;color:#666">${j.client}</div><div style="margin-top:6px"><button data-job-id="${j.id}">Schedule</button></div>`;
+  		      existingJobsEl.appendChild(div);
+  		      div.querySelector('button').addEventListener('click', e=>{
+  		        e.target.disabled = true;
+  		        const jobId = e.target.getAttribute('data-job-id');
+  		        scheduleExistingJob(jobId, selectedDateForModal);
+  		      });
+  		    });
+  		  }).catch(()=>{ existingJobsEl.textContent = 'Failed to load jobs.' });
+
+		  // load clients for new job form
+		  fetch('/api/clients/').then(r => r.json()).then(data => {
+		    clientSelect.innerHTML = '';
+		    data.forEach(c => {
+		      const opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.name; clientSelect.appendChild(opt);
+		    });
+		  });
+		}
+
+		function scheduleExistingJob(jobId, dateStr) {
+		  if (isSubmitting) {
+		    console.warn('Already submitting, ignoring duplicate');
+		    return;
+		  }
+		  isSubmitting = true;
+		  if (abortController) abortController.abort();
+		  abortController = new AbortController();
+		  
+		  const timeVal = document.getElementById('fc-job-time').value || '09:00';
+		  const isoStart = dateStr + 'T' + timeVal + ':00';
+		  const csrftoken = getCookie('csrftoken');
+		  const token = generateToken();
+		  console.log('Scheduling job', jobId, 'at', isoStart);
+		  fetch('/api/schedules/create/', {
+		    method: 'POST',
+		    headers: {'X-CSRFToken': csrftoken,'Content-Type':'application/x-www-form-urlencoded'},
+		    body: new URLSearchParams({job_id: jobId, start: isoStart, token: token}),
+		    signal: abortController.signal
+		  }).then(r=>{
+		    console.log('Response status', r.status);
+		    if (!r.ok) throw new Error('HTTP ' + r.status);
+		    return r.json();
+		  }).then(data=>{
+		    console.log('Response data', data);
+		    if (data && data.success && !data.duplicate) {
+		      location.reload();
+		      return;
+		    } else if (data && data.duplicate) {
+		      console.log('Duplicate submission ignored');
+		    } else alert('Failed to schedule job: ' + JSON.stringify(data));
+		  }).catch(e=>{
+		    console.error('Schedule error', e);
+		    if (e.name === 'AbortError') {
+		      console.log('Schedule request was aborted');
+		    } else {
+		      alert('Network error: ' + e);
+		    }
+		    isSubmitting = false;
+		  });
+		}
+
+		newJobForm.addEventListener('submit', function(e){
+		  e.preventDefault();
+		  console.log('Form submit, isSubmitting=', isSubmitting);
+		  const submitBtn = newJobForm.querySelector('button[type="submit"]');
+		  if (submitBtn && submitBtn.disabled) {
+		    console.warn('BLOCKED: Button already disabled');
+		    return;
+		  }
+		  if (isSubmitting) {
+		    console.warn('BLOCKED: Already submitting, ignoring duplicate');
+		    return;
+		  }
+		  // Set state IMMEDIATELY to prevent race conditions
+		  isSubmitting = true;
+		  if (submitBtn) submitBtn.disabled = true;
+		  console.log('LOCKED: isSubmitting set to true, button disabled');
+		  
+		  // Abort any previous in-flight requests
+		  if (abortController) abortController.abort();
+		  abortController = new AbortController();
+		  
+		  const timeVal = document.getElementById('fc-job-time').value || '09:00';
+		  const isoStart = selectedDateForModal + 'T' + timeVal + ':00';
+		  const form = new FormData(newJobForm);
+		  const token = generateToken();
+		  form.set('start', isoStart);
+		  form.set('token', token);
+		  const csrftoken = getCookie('csrftoken');
+		  console.log('SUBMITTING job creation:', {title: form.get('title'), client_id: form.get('client_id'), start: isoStart});
+		  fetch('/api/jobs/create/', {
+		    method: 'POST',
+		    headers: {'X-CSRFToken': csrftoken},
+		    body: new URLSearchParams(Array.from(form.entries())),
+		    signal: abortController.signal
+		  }).then(r=>{
+		    console.log('Create response status', r.status);
+		    if (!r.ok) {
+		      return r.text().then(text => {
+		        console.error('Error response body:', text);
+		        throw new Error('HTTP ' + r.status + ': ' + text);
+		      });
+		    }
+		    return r.json();
+		  }).then(data=>{
+		    console.log('Create response data', data);
+		    if (data && data.success && !data.duplicate) {
+		      location.reload();
+		      return;
+		    } else if (data && data.duplicate) {
+		      console.log('Create: Duplicate submission ignored');
+		    } else alert('Failed to create job: ' + JSON.stringify(data));
+		  }).catch(e=>{
+		    console.error('Create error', e);
+		    if (e.name === 'AbortError') {
+		      console.log('Request was aborted (new submission started)');
+		    } else {
+		      alert('Error: ' + e.message);
+		    }
+		    isSubmitting = false;
+		  }).finally(() => {
+		    isSubmitting = false;
+		  });
+		});
+		</script>
 {% endblock %}
