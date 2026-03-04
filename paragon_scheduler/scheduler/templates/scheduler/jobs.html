@@ -4,12 +4,34 @@
 
 {% block content %}
   <h2>Jobs</h2>
-  <p><a href="{% url 'add_job' %}" class="add-link">+ Add Job</a></p>
-  <ul>
+  {% if not user.userprofile %}
+    <p><a href="{% url 'add_job' %}" class="add-link">+ Add Job</a></p>
+  {% elif user.userprofile.role != 'assistant_manager' and user.userprofile.role != 'manager' %}
+    <p><a href="{% url 'add_job' %}" class="add-link">+ Add Job</a></p>
+  {% endif %}
+  <div style="display: flex; flex-wrap: wrap; gap: 24px;">
     {% for job in jobs %}
-      <li>{{ job.job_title }} for {{ job.client.name }} on {{ job.scheduled_date }} <a href="{% url 'edit_job' job.id %}">Edit</a></li>
+      <div style="background: #fafbfc; border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 22px; min-width: 320px; max-width: 400px; flex: 1 1 320px; box-shadow: 0 2px 6px #0001; margin-bottom: 12px;">
+        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 4px;">{{ job.job_title }}</div>
+        <div style="margin-bottom: 4px;"><strong>Client:</strong> {{ job.client.name }}</div>
+        <div style="margin-bottom: 4px;"><strong>Description:</strong> {{ job.description|default:'—' }}</div>
+        <div style="margin-bottom: 4px;"><strong>Note:</strong> {{ job.note|default:'—' }}</div>
+        <div style="margin-bottom: 4px;"><strong>Scheduled Date:</strong> {% if job.scheduled_date %}{{ job.scheduled_date }}{% else %}<em>Unscheduled</em>{% endif %}</div>
+        <div style="margin-bottom: 4px;"><strong>Client Location:</strong> {{ job.client.get_location_display }}</div>
+        {% if not user.userprofile %}
+        <div style="margin-bottom: 8px;">
+          <a href="{% url 'edit_job' job.id %}" class="btn btn-sm btn-primary">Edit</a>
+          <a href="{% url 'delete_job' job.id %}" class="btn btn-sm btn-danger">Delete</a>
+        </div>
+        {% elif user.userprofile.role != 'assistant_manager' and user.userprofile.role != 'manager' %}
+        <div style="margin-bottom: 8px;">
+          <a href="{% url 'edit_job' job.id %}" class="btn btn-sm btn-primary">Edit</a>
+          <a href="{% url 'delete_job' job.id %}" class="btn btn-sm btn-danger">Delete</a>
+        </div>
+        {% endif %}
+      </div>
     {% empty %}
-      <li>No jobs yet.</li>
+      <div>No jobs yet.</div>
     {% endfor %}
-  </ul>
+  </div>
 {% endblock %}

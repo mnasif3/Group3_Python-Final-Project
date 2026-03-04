@@ -7,15 +7,73 @@
     <title>{% block title %}Paragon Scheduler{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .site-header a, .site-header a:visited {
+            color: inherit;
+            text-decoration: none;
+            border-radius: 0.25em;
+            padding: 0.25em 0.75em;
+            transition: box-shadow 0.2s, background 0.2s;
+        }
+        .site-header a:hover, .site-header a:focus {
+            text-decoration: underline;
+            background: rgba(255, 193, 7, 0.10);
+            box-shadow: 0 0 0 2px #ffc107;
+        }
+        .site-title a {
+            color: #ffc107 !important;
+            font-weight: bold;
+            font-size: 1.25em;
+            border-radius: 0.25em;
+            padding: 0.25em 0.75em;
+            transition: box-shadow 0.2s, background 0.2s;
+        }
+        .site-title a:hover, .site-title a:focus {
+            background: rgba(255, 193, 7, 0.10);
+            box-shadow: 0 0 0 2px #ffc107;
+            text-decoration: underline;
+        }
+        .site-header .login-link {
+            border-radius: 0.25em;
+            padding: 0.25em 0.75em;
+            transition: box-shadow 0.2s, background 0.2s;
+        }
+        .site-header .login-link:hover, .site-header .login-link:focus {
+            background: rgba(255, 193, 7, 0.10);
+            box-shadow: 0 0 0 2px #ffc107;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
+
     <header class="site-header">
-        <h1 class="site-title"><a href="{% url 'home' %}">Paragon Scheduler</a></h1>
-        <nav class="site-nav">
-            <a href="{% url 'clients' %}">Clients</a>
-            <a href="{% url 'jobs' %}">Jobs</a>
-            <a href="{% url 'schedule' %}">Schedule</a>
-        </nav>
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; width: 100%;">
+            <div style="display: flex; align-items: center;">
+                <h1 class="site-title" style="margin: 0;"><a href="{% url 'home' %}">Paragon Scheduler</a></h1>
+                <nav class="site-nav" style="display: flex; align-items: center; gap: 1.5em; margin-left: 1.5em;">
+                    <a href="{% url 'clients' %}" style="margin-left: 0;">Clients</a>
+                    <a href="{% url 'jobs' %}">Jobs</a>
+                    <a href="{% url 'schedule' %}">Schedule</a>
+                    {% if user.is_authenticated and user.is_superuser %}
+                        <a href="{% url 'create_user_account' %}">Create User</a>
+                    {% elif user.is_authenticated and user.userprofile and user.userprofile.role == 'division_manager' %}
+                        <a href="{% url 'create_user_account' %}">Create User</a>
+                    {% endif %}
+                </nav>
+            </div>
+            <div style="display: flex; align-items: center;">
+                {% if user.is_authenticated %}
+                    <span>Logged in as <strong>{{ user.username }}</strong>{% if user.userprofile %} ({{ user.userprofile.get_role_display }}){% endif %}</span>
+                    <form action="{% url 'logout' %}" method="post" style="display:inline; margin-left:0.5em;">
+                        {% csrf_token %}
+                        <button type="submit" style="background:none; border:none; color:inherit; text-decoration:underline; cursor:pointer; padding:0; outline:none;">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="login-link" style="margin-left: 1em;">Login</a>
+                {% endif %}
+            </div>
+        </div>
     </header>
 
     <main class="container">

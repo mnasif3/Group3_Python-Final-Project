@@ -1,0 +1,14 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Delete Client — Paragon Scheduler{% endblock %}
+
+{% block content %}
+  <h2>Delete Client</h2>
+  <p>Are you sure you want to delete <strong>{{ client.name }}</strong>?</p>
+  <p>This action cannot be undone. All jobs associated with this client will also be deleted.</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a href="{% url 'clients' %}" class="btn btn-secondary">Cancel</a>
+  </form>
+{% endblock %}

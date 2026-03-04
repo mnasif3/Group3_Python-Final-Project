@@ -1,5 +1,23 @@
 from django import forms
-from .models import Client, Job
+from django.contrib.auth.models import User
+from .models import UserProfile, Client, Job
+
+
+class UserCreationWithRoleForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+    role = forms.ChoiceField(choices=UserProfile.ROLE_CHOICES)
+
+    class Meta:
+        model = User
+        fields = ['username', 'password']
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+            UserProfile.objects.create(user=user, role=self.cleaned_data['role'])
+        return user
 
 
 class ClientForm(forms.ModelForm):
@@ -7,7 +25,7 @@ class ClientForm(forms.ModelForm):
     
     class Meta:
         model = Client
-        fields = ['name', 'email', 'phone_number']
+        fields = ['name', 'email', 'phone_number', 'location']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -21,6 +39,9 @@ class ClientForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Enter phone number'
             }),
+            'location': forms.Select(attrs={
+                'class': 'form-control',
+            }),
         }
 
 
@@ -29,7 +50,7 @@ class JobForm(forms.ModelForm):
     
     class Meta:
         model = Job
-        fields = ['client', 'job_title', 'description', 'scheduled_date', 'note', 'type']
+        fields = ['client', 'job_title', 'description', 'scheduled_date', 'note']
         widgets = {
             'client': forms.Select(attrs={
                 'class': 'form-control',
@@ -45,15 +66,16 @@ class JobForm(forms.ModelForm):
             }),
             'scheduled_date': forms.DateTimeInput(attrs={
                 'class': 'form-control',
-                'type': 'datetime-local'
+                'type': 'datetime-local',
+                'placeholder': 'Leave blank if unscheduled',
             }),
             'note': forms.Textarea(attrs={
                 'class': 'form-control',
                 'placeholder': 'Add notes (optional)',
                 'rows': 3
             }),
-            'type': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter job type'
-            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['scheduled_date'].required = False

@@ -19,6 +19,9 @@
 
 		<script>
 		console.log('schedule page script start');
+		const userRole = "{{ user_role|default:''|escapejs }}";
+		const isAssistant = userRole === 'assistant_manager';
+		const isManager = userRole === 'manager';
 		if (typeof FullCalendar === 'undefined') {
 			console.error('FullCalendar not loaded');
 		} else {
@@ -54,8 +57,8 @@
 			const calendarEl = document.getElementById('calendar');
 			calendar = new FullCalendar.Calendar(calendarEl, {
 				initialView: 'dayGridMonth',
-				editable: true,
-				selectable: true,
+				editable: !isAssistant,
+				selectable: !isAssistant,
 				headerToolbar: {
 					left: 'prev,next today',
 					center: 'title',
@@ -63,6 +66,10 @@
 				},
 				events: '/api/schedules/',
 				eventDrop: function(info) {
+					if (isAssistant) {
+						info.revert();
+						return;
+					}
 					fetch(`/api/schedules/${info.event.id}/move/`, {
 						method: 'POST',
 						headers: {
@@ -81,6 +88,8 @@
 					});
 				},
 				eventClick: function(info) {
+					// Managers + assistants are view-only on status; only division managers/admin can toggle
+					if (isAssistant || isManager) return;
 					fetch(`/api/schedules/${info.event.id}/toggle/`, {
 						method: 'POST',
 						headers: {'X-CSRFToken': csrftoken}
@@ -117,18 +126,31 @@
 			<div style="flex:1;">
 				<h5>Scheduled Jobs</h5>
 				<div id="fc-scheduled-jobs" style="max-height:140px;overflow:auto;border:1px solid #eee;padding:8px;margin-bottom:8px;"></div>
-				<h5>Unscheduled Jobs</h5>
-				<div id="fc-existing-jobs" style="max-height:140px;overflow:auto;border:1px solid #eee;padding:8px;"></div>
+				<div id="fc-unscheduled-section">
+					<h5>Unscheduled Jobs</h5>
+					<div id="fc-existing-jobs" style="max-height:140px;overflow:auto;border:1px solid #eee;padding:8px;"></div>
+				</div>
 			</div>
-		      <div style="flex:1;">
+		      <div style="flex:1;" id="fc-create-section">
 		        <h5>Create Job</h5>
-		        <form id="fc-new-job-form">
-		          <div><label>Title<br><input name="title" required style="width:100%"></label></div>
-		          <div><label>Client<br><select name="client_id" id="fc-client-select" required style="width:100%"></select></label></div>
-		          <div><label>Description<br><textarea name="description" style="width:100%"></textarea></label></div>
-		          <div><label>Time<br><input type="time" id="fc-job-time" value="09:00" /></label></div>
-		          <div style="margin-top:8px"><button type="submit">Create & Schedule</button></div>
-		        </form>
+				<form id="fc-new-job-form">
+					<div><label>Title<br><input name="title" required style="width:100%"></label></div>
+					<div><label>Client<br><select name="client_id" id="fc-client-select" required style="width:100%"></select></label></div>
+			          <div><label>Location<br>
+					  <select name="location" id="fc-job-location" style="width:100%">
+						  <option value="N">North</option>
+						  <option value="NE">Northeast</option>
+						  <option value="NW">Northwest</option>
+						  <option value="S">South</option>
+						  <option value="SW">Southwest</option>
+						  <option value="SE">Southeast</option>
+						  <option value="OH" selected>Ohio</option>
+					  </select>
+				  </label></div>
+					<div><label>Description<br><textarea name="description" style="width:100%"></textarea></label></div>
+					<div><label>Time<br><input type="time" id="fc-job-time" value="09:00" /></label></div>
+					<div style="margin-top:8px"><button type="submit">Create & Schedule</button></div>
+				</form>
 		      </div>
 		    </div>
 		  </div>
@@ -139,6 +161,8 @@
 		const modalOverlay = document.getElementById('fc-modal-overlay');
 		const modalDateEl = document.getElementById('fc-modal-date');
 		const existingJobsEl = document.getElementById('fc-existing-jobs');
+		const unscheduledSectionEl = document.getElementById('fc-unscheduled-section');
+		const createSectionEl = document.getElementById('fc-create-section');
 		const clientSelect = document.getElementById('fc-client-select');
 		const newJobForm = document.getElementById('fc-new-job-form');
 		document.getElementById('fc-modal-close').addEventListener('click', () => modalOverlay.style.display='none');
@@ -155,10 +179,50 @@
 		  });
 		}
 
+		function unscheduleScheduledJob(scheduleId) {
+			const csrftoken = getCookie('csrftoken');
+			if (!confirm('Unschedule this job? It will appear under Unscheduled Jobs.')) return;
+			fetch(`/api/schedules/${scheduleId}/unschedule/`, {
+				method: 'POST',
+				headers: {'X-CSRFToken': csrftoken}
+			}).then(r => r.json()).then(data => {
+				if (data.success) {
+					location.reload();
+				} else {
+					alert('Failed to unschedule job');
+				}
+			}).catch(() => alert('Network error'));
+		}
+
+		function deleteUnscheduledJob(jobId) {
+			const csrftoken = getCookie('csrftoken');
+			if (!confirm('Are you sure you want to delete this job? This cannot be undone.')) return;
+			fetch(`/api/jobs/${jobId}/delete/`, {
+				method: 'POST',
+				headers: {'X-CSRFToken': csrftoken}
+			}).then(r => r.json()).then(data => {
+				if (data.success) {
+					location.reload();
+				} else {
+					alert('Failed to delete job');
+				}
+			}).catch(() => alert('Network error'));
+		}
+
 		function openScheduleModal(dateStr) {
 		  selectedDateForModal = dateStr;
 		  modalDateEl.textContent = dateStr;
 		  modalOverlay.style.display = 'block';
+		  if (isAssistant) {
+			unscheduledSectionEl.style.display = 'none';
+			createSectionEl.style.display = 'none';
+		  } else if (isManager) {
+			unscheduledSectionEl.style.display = '';
+			createSectionEl.style.display = 'none';
+		  } else {
+			unscheduledSectionEl.style.display = '';
+			createSectionEl.style.display = '';
+		  }
   		  // load scheduled jobs for the date and unscheduled jobs
   		  const scheduledJobsEl = document.getElementById('fc-scheduled-jobs');
   		  fetch('/api/schedules/').then(r => r.json()).then(events => {
@@ -169,28 +233,60 @@
   		      const div = document.createElement('div');
   		      div.style.padding='6px';
   		      div.style.borderBottom='1px solid #f0f0f0';
-  		      div.innerHTML = `<strong>${ev.title}</strong><div style="font-size:12px;color:#666">${ev.client || ''}</div>`;
+		      let client = ev.client || '';
+		      let location = (ev.location !== undefined && ev.location !== null && ev.location !== '') ? ev.location : 'No location';
+		      let clientLoc = client ? client + ' — ' + location : location;
+		      if (isAssistant) {
+		      	div.innerHTML = `<strong>${ev.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div>`;
+		      } else {
+		      	div.innerHTML = `<strong>${ev.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div><div style="margin-top:6px"><button class="unschedule-btn" data-schedule-id="${ev.id}">Unschedule</button></div>`;
+		      }
   		      scheduledJobsEl.appendChild(div);
+		      if (!isAssistant) {
+		      	div.querySelector('.unschedule-btn').addEventListener('click', e => {
+		      		e.preventDefault();
+		      		const scheduleId = e.target.getAttribute('data-schedule-id');
+		      		unscheduleScheduledJob(scheduleId);
+		      	});
+		      }
   		    });
   		  }).catch(()=>{ scheduledJobsEl.textContent = 'Failed to load scheduled jobs.' });
 
   		  // unscheduled jobs
-  		  fetch('/api/jobs/').then(r => r.json()).then(data => {
-  		    existingJobsEl.innerHTML = '';
-  		    if (!data.length) existingJobsEl.textContent = 'No scheduled jobs.';
-  		    data.forEach(j => {
-  		      const div = document.createElement('div');
-  		      div.style.padding='6px';
-  		      div.style.borderBottom='1px solid #f0f0f0';
-  		      div.innerHTML = `<strong>${j.title}</strong><div style="font-size:12px;color:#666">${j.client}</div><div style="margin-top:6px"><button data-job-id="${j.id}">Schedule</button></div>`;
-  		      existingJobsEl.appendChild(div);
-  		      div.querySelector('button').addEventListener('click', e=>{
-  		        e.target.disabled = true;
-  		        const jobId = e.target.getAttribute('data-job-id');
-  		        scheduleExistingJob(jobId, selectedDateForModal);
-  		      });
-  		    });
-  		  }).catch(()=>{ existingJobsEl.textContent = 'Failed to load jobs.' });
+		  if (isAssistant) return;
+		  fetch('/api/jobs/').then(r => r.json()).then(data => {
+		    existingJobsEl.innerHTML = '';
+		    if (!data.length) {
+		    	existingJobsEl.textContent = 'No unscheduled jobs.';
+		    	return;
+		    }
+			data.forEach(j => {
+				const div = document.createElement('div');
+				div.style.padding='6px';
+				div.style.borderBottom='1px solid #f0f0f0';
+				let client = j.client || '';
+				let location = (j.location !== undefined && j.location !== null && j.location !== '') ? j.location : 'No location';
+				let clientLoc = client ? client + ' — ' + location : location;
+				if (isManager) {
+					div.innerHTML = `<strong>${j.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div><div style="margin-top:6px"><button data-job-id="${j.id}" class="schedule-btn">Schedule</button></div>`;
+				} else {
+					div.innerHTML = `<strong>${j.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div><div style="margin-top:6px"><button data-job-id="${j.id}" class="schedule-btn">Schedule</button> <button data-job-id="${j.id}" class="delete-btn">Delete</button></div>`;
+				}
+				existingJobsEl.appendChild(div);
+				div.querySelector('.schedule-btn').addEventListener('click', e => {
+					e.target.disabled = true;
+					const jobId = e.target.getAttribute('data-job-id');
+					scheduleExistingJob(jobId, selectedDateForModal);
+				});
+				if (!isManager) {
+					div.querySelector('.delete-btn').addEventListener('click', e => {
+						e.target.disabled = true;
+						const jobId = e.target.getAttribute('data-job-id');
+						deleteUnscheduledJob(jobId);
+					});
+				}
+			});
+		  }).catch(()=>{ existingJobsEl.textContent = 'Failed to load jobs.' });
 
 		  // load clients for new job form
 		  fetch('/api/clients/').then(r => r.json()).then(data => {
@@ -266,18 +362,20 @@
 		  
 		  const timeVal = document.getElementById('fc-job-time').value || '09:00';
 		  const isoStart = selectedDateForModal + 'T' + timeVal + ':00';
-		  const form = new FormData(newJobForm);
-		  const token = generateToken();
-		  form.set('start', isoStart);
-		  form.set('token', token);
-		  const csrftoken = getCookie('csrftoken');
-		  console.log('SUBMITTING job creation:', {title: form.get('title'), client_id: form.get('client_id'), start: isoStart});
-		  fetch('/api/jobs/create/', {
-		    method: 'POST',
-		    headers: {'X-CSRFToken': csrftoken},
-		    body: new URLSearchParams(Array.from(form.entries())),
-		    signal: abortController.signal
-		  }).then(r=>{
+			const form = new FormData(newJobForm);
+			const token = generateToken();
+			form.set('start', isoStart);
+			form.set('token', token);
+			const csrftoken = getCookie('csrftoken');
+			// Add location to payload if present
+			const payload = Array.from(form.entries());
+			console.log('SUBMITTING job creation:', {title: form.get('title'), client_id: form.get('client_id'), location: form.get('location'), start: isoStart});
+			fetch('/api/jobs/create/', {
+				method: 'POST',
+				headers: {'X-CSRFToken': csrftoken},
+				body: new URLSearchParams(payload),
+				signal: abortController.signal
+			}).then(r=>{
 		    console.log('Create response status', r.status);
 		    if (!r.ok) {
 		      return r.text().then(text => {

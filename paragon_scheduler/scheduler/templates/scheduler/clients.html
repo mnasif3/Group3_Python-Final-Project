@@ -4,12 +4,49 @@
 
 {% block content %}
   <h2>Clients</h2>
-  <p><a href="{% url 'add_client' %}" class="add-link">+ Add Client</a></p>
-  <ul>
+  {% if not user.userprofile %}
+    <p><a href="{% url 'add_client' %}" class="add-link">+ Add Client</a></p>
+  {% elif user.userprofile.role != 'assistant_manager' and user.userprofile.role != 'manager' %}
+    <p><a href="{% url 'add_client' %}" class="add-link">+ Add Client</a></p>
+  {% endif %}
+  <div style="display: flex; flex-wrap: wrap; gap: 24px;">
     {% for client in clients %}
-      <li>{{ client.name }} — {{ client.email }} <a href="{% url 'edit_client' client.id %}">Edit</a></li>
+      <div style="background: #fafbfc; border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 22px; min-width: 320px; max-width: 400px; flex: 1 1 320px; box-shadow: 0 2px 6px #0001; margin-bottom: 12px;">
+        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 4px;">{{ client.name }}</div>
+        <div style="margin-bottom: 4px;"><strong>Email:</strong> {{ client.email|default:'—' }}</div>
+        <div style="margin-bottom: 4px;"><strong>Phone:</strong> {{ client.phone_number|default:'—' }}</div>
+        <div style="margin-bottom: 8px;"><strong>Location:</strong> {{ client.get_location_display }}</div>
+        {% if not user.userprofile %}
+        <div style="margin-bottom: 8px;">
+          <a href="{% url 'edit_client' client.id %}" class="btn btn-sm btn-primary">Edit</a>
+          <a href="{% url 'delete_client' client.id %}" class="btn btn-sm btn-danger">Delete</a>
+        </div>
+        {% elif user.userprofile.role != 'assistant_manager' and user.userprofile.role != 'manager' %}
+        <div style="margin-bottom: 8px;">
+          <a href="{% url 'edit_client' client.id %}" class="btn btn-sm btn-primary">Edit</a>
+          <a href="{% url 'delete_client' client.id %}" class="btn btn-sm btn-danger">Delete</a>
+        </div>
+        {% endif %}
+        <div style="margin-top: 10px;">
+          <strong>Jobs:</strong>
+          <ul style="margin: 0 0 0 16px; padding: 0;">
+            {% for job in client.job_set.all %}
+              <li style="margin-bottom: 2px;">
+                <span style="font-weight: 500;">{{ job.job_title }}</span>
+                <!-- type removed -->
+                <br>
+                <span style="font-size: 0.95em;">{{ job.description|truncatechars:40 }}</span>
+                <br>
+                <span style="font-size: 0.95em;">{% if job.scheduled_date %}{{ job.scheduled_date }}{% else %}<em>Unscheduled</em>{% endif %}</span>
+              </li>
+            {% empty %}
+              <li style="color: #aaa;">No jobs for this client.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
     {% empty %}
-      <li>No clients yet.</li>
+      <div>No clients yet.</div>
     {% endfor %}
-  </ul>
+  </div>
 {% endblock %}
