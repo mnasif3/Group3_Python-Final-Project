@@ -15,26 +15,13 @@
 
 		<div id="calendar"></div>
 
-		<div id="fc-debug" style="display:none"></div>
-
 		<script>
-		console.log('schedule page script start');
 		const userRole = "{{ user_role|default:''|escapejs }}";
 		const isAssistant = userRole === 'assistant_manager';
 		const isManager = userRole === 'manager';
 		if (typeof FullCalendar === 'undefined') {
 			console.error('FullCalendar not loaded');
-		} else {
-			console.log('FullCalendar loaded', FullCalendar.Calendar ? 'Calendar OK' : 'Calendar missing');
 		}
-		// test events endpoint
-		fetch('/api/schedules/').then(r => {
-			console.log('schedules endpoint status', r.status);
-			return r.json().catch(e => { console.error('invalid json from schedules', e); return null });
-		}).then(data => {
-			console.log('schedules data', data);
-			if (!data) document.getElementById('fc-debug').textContent = 'No JSON data returned';
-		}).catch(e => console.error('fetch schedules failed', e));
 		function getCookie(name) {
 			let cookieValue = null;
 			if (document.cookie && document.cookie !== '') {
@@ -110,7 +97,6 @@
 			});
 
 			calendar.render();
-			console.log('calendar rendered');
 		});
 		</script>
 
@@ -169,7 +155,6 @@
 
 		let selectedDateForModal = null;
 		let isSubmitting = false;
-		let lastSubmissionToken = null;
 		let abortController = null;
 		
 		function generateToken() {
@@ -310,38 +295,33 @@
 		  const isoStart = dateStr + 'T' + timeVal + ':00';
 		  const csrftoken = getCookie('csrftoken');
 		  const token = generateToken();
-		  console.log('Scheduling job', jobId, 'at', isoStart);
 		  fetch('/api/schedules/create/', {
 		    method: 'POST',
 		    headers: {'X-CSRFToken': csrftoken,'Content-Type':'application/x-www-form-urlencoded'},
 		    body: new URLSearchParams({job_id: jobId, start: isoStart, token: token}),
 		    signal: abortController.signal
 		  }).then(r=>{
-		    console.log('Response status', r.status);
 		    if (!r.ok) throw new Error('HTTP ' + r.status);
 		    return r.json();
 		  }).then(data=>{
-		    console.log('Response data', data);
 		    if (data && data.success && !data.duplicate) {
 		      location.reload();
 		      return;
 		    } else if (data && data.duplicate) {
-		      console.log('Duplicate submission ignored');
+		      return;
 		    } else alert('Failed to schedule job: ' + JSON.stringify(data));
 		  }).catch(e=>{
 		    console.error('Schedule error', e);
-		    if (e.name === 'AbortError') {
-		      console.log('Schedule request was aborted');
-		    } else {
+		    if (e.name !== 'AbortError') {
 		      alert('Network error: ' + e);
 		    }
+		  }).finally(() => {
 		    isSubmitting = false;
 		  });
 		}
 
 		newJobForm.addEventListener('submit', function(e){
 		  e.preventDefault();
-		  console.log('Form submit, isSubmitting=', isSubmitting);
 		  const submitBtn = newJobForm.querySelector('button[type="submit"]');
 		  if (submitBtn && submitBtn.disabled) {
 		    console.warn('BLOCKED: Button already disabled');
@@ -354,7 +334,6 @@
 		  // Set state IMMEDIATELY to prevent race conditions
 		  isSubmitting = true;
 		  if (submitBtn) submitBtn.disabled = true;
-		  console.log('LOCKED: isSubmitting set to true, button disabled');
 		  
 		  // Abort any previous in-flight requests
 		  if (abortController) abortController.abort();
@@ -369,14 +348,12 @@
 			const csrftoken = getCookie('csrftoken');
 			// Add location to payload if present
 			const payload = Array.from(form.entries());
-			console.log('SUBMITTING job creation:', {title: form.get('title'), client_id: form.get('client_id'), location: form.get('location'), start: isoStart});
 			fetch('/api/jobs/create/', {
 				method: 'POST',
 				headers: {'X-CSRFToken': csrftoken},
 				body: new URLSearchParams(payload),
 				signal: abortController.signal
 			}).then(r=>{
-		    console.log('Create response status', r.status);
 		    if (!r.ok) {
 		      return r.text().then(text => {
 		        console.error('Error response body:', text);
@@ -385,21 +362,17 @@
 		    }
 		    return r.json();
 		  }).then(data=>{
-		    console.log('Create response data', data);
 		    if (data && data.success && !data.duplicate) {
 		      location.reload();
 		      return;
 		    } else if (data && data.duplicate) {
-		      console.log('Create: Duplicate submission ignored');
+		      return;
 		    } else alert('Failed to create job: ' + JSON.stringify(data));
 		  }).catch(e=>{
 		    console.error('Create error', e);
-		    if (e.name === 'AbortError') {
-		      console.log('Request was aborted (new submission started)');
-		    } else {
+		    if (e.name !== 'AbortError') {
 		      alert('Error: ' + e.message);
 		    }
-		    isSubmitting = false;
 		  }).finally(() => {
 		    isSubmitting = false;
 		  });

@@ -24,16 +24,13 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.utils.dateparse import parse_datetime, parse_date
 from datetime import datetime, time
-from collections import defaultdict
 import time as time_module
 
 from .models import Client, Job, Scheduler
 from .forms import ClientForm, JobForm, UserCreationWithRoleForm
 from django.contrib import messages
-from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Exists, OuterRef
 
 # Simple deduplication cache: token -> timestamp
 # Clean up entries older than 5 seconds
