@@ -1,0 +1,5 @@
+# Runtime dependencies
+Django==5.2.11
+
+# Dev-only (optional): typing stubs for better VS Code/Pylance hints
+# django-stubs==5.2.0
