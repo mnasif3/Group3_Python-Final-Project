@@ -6,10 +6,10 @@ $ErrorActionPreference = 'Stop'
 
 function Resolve-PythonLauncher {
   if (Get-Command py -ErrorAction SilentlyContinue) {
-    return @('py', '-3')
+    return 'py', '-3'
   }
   if (Get-Command python -ErrorAction SilentlyContinue) {
-    return @('python')
+    return 'python'
   }
   throw 'Python not found. Install Python 3.x or ensure `py` / `python` is on PATH.'
 }
