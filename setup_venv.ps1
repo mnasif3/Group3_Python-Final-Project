@@ -6,10 +6,10 @@ $ErrorActionPreference = 'Stop'
 
 function Resolve-PythonLauncher {
   if (Get-Command py -ErrorAction SilentlyContinue) {
-    return @('py', '-3')
+    return 'py', '-3'
   }
   if (Get-Command python -ErrorAction SilentlyContinue) {
-    return @('python')
+    return 'python'
   }
   throw 'Python not found. Install Python 3.x or ensure `py` / `python` is on PATH.'
 }
@@ -28,7 +28,7 @@ if ($ForceRecreate -and (Test-Path $venvPath)) {
 
 if (-not (Test-Path $venvPath)) {
   Write-Host "Creating virtual environment at .venv..."
-  & $pythonCmd -m venv .venv
+  & $pythonCmd[0] $pythonCmd[1..($pythonCmd.Length-1)] -m venv .venv
 }
 
 if (-not (Test-Path $activatePath)) {

@@ -162,6 +162,7 @@ def schedules_json(request):
     events = []
     for s in schedules:
         location = s.job.client.location if s.job and s.job.client else ''
+        address = s.job.client.address if s.job and s.job.client else ''
         if s.scheduled_time is None:
             continue
         start = s.scheduled_time.isoformat()
@@ -172,6 +173,7 @@ def schedules_json(request):
             'status': s.status,
             'client': s.job.client.name if s.job and s.job.client else '',
             'location': location,
+            'address': address,
             'color': '#28a745' if s.status == 'completed' else '#007bff',
         })
     return JsonResponse(events, safe=False)
@@ -262,6 +264,7 @@ def jobs_json(request):
             'title': j.job_title,
             'client': j.client.name,
             'location': j.client.location if j.client else '',
+            'address': j.client.address if j.client else '',
         })
     return JsonResponse(data, safe=False)
 

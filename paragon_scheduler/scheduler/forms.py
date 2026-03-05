@@ -25,7 +25,7 @@ class ClientForm(forms.ModelForm):
     
     class Meta:
         model = Client
-        fields = ['name', 'email', 'phone_number', 'location']
+        fields = ['name', 'email', 'phone_number', 'address', 'location']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -38,6 +38,11 @@ class ClientForm(forms.ModelForm):
             'phone_number': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter phone number'
+            }),
+            'address': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter full street address',
+                'rows': 3
             }),
             'location': forms.Select(attrs={
                 'class': 'form-control',

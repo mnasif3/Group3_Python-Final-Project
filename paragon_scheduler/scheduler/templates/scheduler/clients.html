@@ -15,6 +15,7 @@
         <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 4px;">{{ client.name }}</div>
         <div style="margin-bottom: 4px;"><strong>Email:</strong> {{ client.email|default:'—' }}</div>
         <div style="margin-bottom: 4px;"><strong>Phone:</strong> {{ client.phone_number|default:'—' }}</div>
+        <div style="margin-bottom: 4px;"><strong>Address:</strong> {{ client.address|default:'—' }}</div>
         <div style="margin-bottom: 8px;"><strong>Location:</strong> {{ client.get_location_display }}</div>
         {% if not user.userprofile %}
         <div style="margin-bottom: 8px;">

@@ -31,6 +31,7 @@ class Client(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(blank=True)
     phone_number = models.CharField(max_length=10, blank=True)
+    address = models.TextField(blank=True, help_text="Full street address")
     location = models.CharField(max_length=2, choices=LOCATION_CHOICES, default='OH', blank=True)
 
     def __str__(self):

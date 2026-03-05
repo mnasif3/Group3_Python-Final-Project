@@ -220,11 +220,13 @@
   		      div.style.borderBottom='1px solid #f0f0f0';
 		      let client = ev.client || '';
 		      let location = (ev.location !== undefined && ev.location !== null && ev.location !== '') ? ev.location : 'No location';
+		      let address = (ev.address !== undefined && ev.address !== null && ev.address !== '') ? ev.address : '';
 		      let clientLoc = client ? client + ' — ' + location : location;
+		      let addressText = address ? `<div style="font-size:11px;color:#888;margin-top:2px">${address}</div>` : '';
 		      if (isAssistant) {
-		      	div.innerHTML = `<strong>${ev.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div>`;
+		      	div.innerHTML = `<strong>${ev.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div>${addressText}`;
 		      } else {
-		      	div.innerHTML = `<strong>${ev.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div><div style="margin-top:6px"><button class="unschedule-btn" data-schedule-id="${ev.id}">Unschedule</button></div>`;
+		      	div.innerHTML = `<strong>${ev.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div>${addressText}<div style="margin-top:6px"><button class="unschedule-btn" data-schedule-id="${ev.id}">Unschedule</button></div>`;
 		      }
   		      scheduledJobsEl.appendChild(div);
 		      if (!isAssistant) {
@@ -251,11 +253,13 @@
 				div.style.borderBottom='1px solid #f0f0f0';
 				let client = j.client || '';
 				let location = (j.location !== undefined && j.location !== null && j.location !== '') ? j.location : 'No location';
+				let address = (j.address !== undefined && j.address !== null && j.address !== '') ? j.address : '';
 				let clientLoc = client ? client + ' — ' + location : location;
+				let addressText = address ? `<div style="font-size:11px;color:#888;margin-top:2px">${address}</div>` : '';
 				if (isManager) {
-					div.innerHTML = `<strong>${j.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div><div style="margin-top:6px"><button data-job-id="${j.id}" class="schedule-btn">Schedule</button></div>`;
+					div.innerHTML = `<strong>${j.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div>${addressText}<div style="margin-top:6px"><button data-job-id="${j.id}" class="schedule-btn">Schedule</button></div>`;
 				} else {
-					div.innerHTML = `<strong>${j.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div><div style="margin-top:6px"><button data-job-id="${j.id}" class="schedule-btn">Schedule</button> <button data-job-id="${j.id}" class="delete-btn">Delete</button></div>`;
+					div.innerHTML = `<strong>${j.title}</strong><div style="font-size:12px;color:#666">${clientLoc}</div>${addressText}<div style="margin-top:6px"><button data-job-id="${j.id}" class="schedule-btn">Schedule</button> <button data-job-id="${j.id}" class="delete-btn">Delete</button></div>`;
 				}
 				existingJobsEl.appendChild(div);
 				div.querySelector('.schedule-btn').addEventListener('click', e => {
