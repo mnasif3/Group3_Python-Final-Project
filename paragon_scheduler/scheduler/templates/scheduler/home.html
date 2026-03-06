@@ -1,11 +1,162 @@
-{% extends 'scheduler/base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Client Job Scheduler</title>
 
-{% block title %}Welcome — Paragon Scheduler{% endblock %}
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f4f4f4;
+            margin: 40px;
+        }
 
-{% block content %}
-  <h2>Welcome</h2>
-  <p>Use the links in the header to navigate the site.</p>
-  <p>
-    Quick links: <a href="{% url 'clients' %}">Clients</a> · <a href="{% url 'jobs' %}">Jobs</a> · <a href="{% url 'schedule' %}">Schedule</a>
-  </p>
-{% endblock %}
+        h1 {
+            text-align: center;
+        }
+
+        .navbar {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .navbar a {
+            padding: 10px 15px;
+            background: #007BFF;
+            color: white;
+            text-decoration: none;
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        .navbar a:hover {
+            background: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+            background: white;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #333;
+            color: white;
+        }
+
+        .pending {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .completed {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+
+</head>
+<body>
+
+<h1>Client Job Scheduler</h1>
+
+<div class="navbar">
+    <a href="{% url 'add_client' %}">Add Client</a>
+    <a href="{% url 'add_job' %}">Add Job</a>
+    <a href="{% url 'schedule_job' %}">Schedule Job</a>
+</div>
+
+<hr>
+
+<h2>Clients</h2>
+
+<table>
+<tr>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Phone</th>
+</tr>
+
+{% for client in clients %}
+<tr>
+    <td>{{ client.name }}</td>
+    <td>{{ client.email }}</td>
+    <td>{{ client.phone_number }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="3">No clients yet.</td>
+</tr>
+{% endfor %}
+
+</table>
+
+
+<h2>Jobs</h2>
+
+<table>
+<tr>
+    <th>Client</th>
+    <th>Job Title</th>
+    <th>Description</th>
+    <th>Scheduled Date</th>
+    <th>Type</th>
+</tr>
+
+{% for job in jobs %}
+<tr>
+    <td>{{ job.client.name }}</td>
+    <td>{{ job.job_title }}</td>
+    <td>{{ job.description }}</td>
+    <td>{{ job.scheduled_date }}</td>
+    <td>{{ job.type }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="5">No jobs created.</td>
+</tr>
+{% endfor %}
+
+</table>
+
+
+<h2>Scheduled Jobs</h2>
+
+<table>
+<tr>
+    <th>Job</th>
+    <th>Scheduled Time</th>
+    <th>Status</th>
+    <th>Completed At</th>
+</tr>
+
+{% for s in schedules %}
+<tr>
+    <td>{{ s.job.job_title }}</td>
+    <td>{{ s.scheduled_time }}</td>
+
+    <td class="{{ s.status }}">
+        {{ s.status }}
+    </td>
+
+    <td>{{ s.completed_at }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="4">No schedules yet.</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>
