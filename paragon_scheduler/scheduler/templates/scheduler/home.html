@@ -49,7 +49,7 @@
                     <td>{{ job.description|default:'—' }}</td>
                     <td>
                         {% if job.scheduled_date %}
-                            {{ job.scheduled_date|date:"Y-m-d H:i" }}
+                            {{ job.scheduled_date }}
                         {% else %}
                             <em>Unscheduled</em>
                         {% endif %}
@@ -82,11 +82,11 @@
                 <tr>
                     <td>{{ s.job.job_title }}</td>
                     <td>{{ s.job.client.name }}</td>
-                    <td>{{ s.scheduled_time|date:"Y-m-d H:i" }}</td>
+                    <td>{{ s.scheduled_time }}</td>
                     <td>{{ s.get_status_display }}</td>
                     <td>
                         {% if s.completed_at %}
-                            {{ s.completed_at|date:"Y-m-d H:i" }}
+                            {{ s.completed_at }}
                         {% else %}
                             —
                         {% endif %}

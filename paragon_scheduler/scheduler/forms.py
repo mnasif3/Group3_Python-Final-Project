@@ -52,6 +52,19 @@ class ClientForm(forms.ModelForm):
 
 class JobForm(forms.ModelForm):
     """Form for creating and editing jobs."""
+
+    scheduled_date = forms.DateTimeField(
+        required=False,
+        widget=forms.DateTimeInput(
+            attrs={
+                'class': 'form-control',
+                'type': 'datetime-local',
+                'placeholder': 'Leave blank if unscheduled',
+            },
+            format='%Y-%m-%dT%H:%M',
+        ),
+        input_formats=['%Y-%m-%dT%H:%M'],
+    )
     
     class Meta:
         model = Job
@@ -69,11 +82,6 @@ class JobForm(forms.ModelForm):
                 'placeholder': 'Enter job description',
                 'rows': 4
             }),
-            'scheduled_date': forms.DateTimeInput(attrs={
-                'class': 'form-control',
-                'type': 'datetime-local',
-                'placeholder': 'Leave blank if unscheduled',
-            }),
             'note': forms.Textarea(attrs={
                 'class': 'form-control',
                 'placeholder': 'Add notes (optional)',
@@ -83,4 +91,6 @@ class JobForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['scheduled_date'].required = False
+        # Ensure any initial value renders without seconds.
+        if self.instance and getattr(self.instance, 'scheduled_date', None):
+            self.initial['scheduled_date'] = self.instance.scheduled_date
