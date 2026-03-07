@@ -6,10 +6,10 @@ $ErrorActionPreference = 'Stop'
 
 function Resolve-PythonLauncher {
   if (Get-Command py -ErrorAction SilentlyContinue) {
-    return 'py', '-3'
+    return @('py', '-3')
   }
   if (Get-Command python -ErrorAction SilentlyContinue) {
-    return 'python'
+    return @('python')
   }
   throw 'Python not found. Install Python 3.x or ensure `py` / `python` is on PATH.'
 }
@@ -19,7 +19,7 @@ Set-Location $repoRoot
 
 $venvPath = Join-Path $repoRoot '.venv'
 $activatePath = Join-Path $venvPath 'Scripts\Activate.ps1'
-$pythonCmd = Resolve-PythonLauncher
+$pythonCmd = @(Resolve-PythonLauncher)
 
 if ($ForceRecreate -and (Test-Path $venvPath)) {
   Write-Host "Removing existing .venv..."
@@ -28,7 +28,12 @@ if ($ForceRecreate -and (Test-Path $venvPath)) {
 
 if (-not (Test-Path $venvPath)) {
   Write-Host "Creating virtual environment at .venv..."
-  & $pythonCmd[0] $pythonCmd[1..($pythonCmd.Length-1)] -m venv .venv
+  $pythonExe = $pythonCmd[0]
+  $pythonArgs = @()
+  if ($pythonCmd.Length -gt 1) {
+    $pythonArgs = $pythonCmd[1..($pythonCmd.Length - 1)]
+  }
+  & $pythonExe @pythonArgs -m venv .venv
 }
 
 if (-not (Test-Path $activatePath)) {

@@ -56,8 +56,24 @@ def check_and_mark_submission(token):
         return True  # New submission
 
 
+@login_required
 def home(request):
-    return render(request, 'scheduler/home.html')
+    clients = Client.objects.all().order_by('name')
+    jobs = Job.objects.select_related('client').all().order_by('-id')
+    schedules = (
+        Scheduler.objects.select_related('job', 'job__client')
+        .filter(scheduled_time__isnull=False)
+        .order_by('-scheduled_time')
+    )
+    return render(
+        request,
+        'scheduler/home.html',
+        {
+            'clients': clients,
+            'jobs': jobs,
+            'schedules': schedules,
+        },
+    )
 
 
 @login_required

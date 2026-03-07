@@ -1,11 +1,103 @@
 {% extends 'scheduler/base.html' %}
 
-{% block title %}Welcome — Paragon Scheduler{% endblock %}
+{% block title %}Home — Paragon Scheduler{% endblock %}
 
 {% block content %}
-  <h2>Welcome</h2>
-  <p>Use the links in the header to navigate the site.</p>
-  <p>
-    Quick links: <a href="{% url 'clients' %}">Clients</a> · <a href="{% url 'jobs' %}">Jobs</a> · <a href="{% url 'schedule' %}">Schedule</a>
-  </p>
+<h2>Clients</h2>
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+                <tr>
+                    <td>{{ client.name }}</td>
+                    <td>{{ client.email|default:'—' }}</td>
+                    <td>{{ client.phone_number|default:'—' }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No clients yet.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<h2>Jobs</h2>
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Client</th>
+                <th>Job Title</th>
+                <th>Description</th>
+                <th>Scheduled Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+                <tr>
+                    <td>{{ job.client.name }}</td>
+                    <td>{{ job.job_title }}</td>
+                    <td>{{ job.description|default:'—' }}</td>
+                    <td>
+                        {% if job.scheduled_date %}
+                            {{ job.scheduled_date|date:"Y-m-d H:i" }}
+                        {% else %}
+                            <em>Unscheduled</em>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">No jobs created.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<h2>Scheduled Jobs</h2>
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Job</th>
+                <th>Client</th>
+                <th>Scheduled Time</th>
+                <th>Status</th>
+                <th>Completed At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in schedules %}
+                <tr>
+                    <td>{{ s.job.job_title }}</td>
+                    <td>{{ s.job.client.name }}</td>
+                    <td>{{ s.scheduled_time|date:"Y-m-d H:i" }}</td>
+                    <td>{{ s.get_status_display }}</td>
+                    <td>
+                        {% if s.completed_at %}
+                            {{ s.completed_at|date:"Y-m-d H:i" }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">No schedules yet.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
