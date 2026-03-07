@@ -86,17 +86,15 @@
     <th>Phone</th>
 </tr>
 
-{% for client in clients %}
+
 <tr>
-    <td>{{ client.name }}</td>
-    <td>{{ client.email }}</td>
-    <td>{{ client.phone_number }}</td>
+
 </tr>
-{% empty %}
+
 <tr>
     <td colspan="3">No clients yet.</td>
 </tr>
-{% endfor %}
+
 
 </table>
 
@@ -112,19 +110,13 @@
     <th>Type</th>
 </tr>
 
-{% for job in jobs %}
-<tr>
-    <td>{{ job.client.name }}</td>
-    <td>{{ job.job_title }}</td>
-    <td>{{ job.description }}</td>
-    <td>{{ job.scheduled_date }}</td>
-    <td>{{ job.type }}</td>
-</tr>
-{% empty %}
+
+
+
 <tr>
     <td colspan="5">No jobs created.</td>
 </tr>
-{% endfor %}
+
 
 </table>
 
@@ -139,22 +131,17 @@
     <th>Completed At</th>
 </tr>
 
-{% for s in schedules %}
+
 <tr>
-    <td>{{ s.job.job_title }}</td>
-    <td>{{ s.scheduled_time }}</td>
 
-    <td class="{{ s.status }}">
-        {{ s.status }}
-    </td>
 
-    <td>{{ s.completed_at }}</td>
-</tr>
-{% empty %}
+
+
+
 <tr>
     <td colspan="4">No schedules yet.</td>
 </tr>
-{% endfor %}
+
 
 </table>
 
