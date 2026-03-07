@@ -51,11 +51,11 @@ classDiagram
 ```mermaid
 flowchart LR
   browser[Browser]
-  templates[Templates\n(base.html, home.html, schedule.html, ...)]
-  urls_project[paragon_scheduler/urls.py]\n("/" includes scheduler.urls)
-  urls_app[scheduler/urls.py]
-  views[scheduler/views.py]
-  models[scheduler/models.py]\n(Client, Job, Scheduler, UserProfile)
+  templates["Templates<br/>base.html<br/>home.html<br/>schedule.html<br/>..."]
+  urls_project["paragon_scheduler/urls.py<br/>\"/\" includes scheduler.urls"]
+  urls_app["scheduler/urls.py"]
+  views["scheduler/views.py"]
+  models["scheduler/models.py<br/>Client, Job, Scheduler, UserProfile"]
   db[(SQLite db.sqlite3)]
 
   browser --> templates
@@ -66,16 +66,16 @@ flowchart LR
   views -. JSON .-> browser
 
   subgraph Calendar APIs
-    api1[/GET /api/schedules/\n(schedules_json)/]
-    api2[/POST /api/schedules/{id}/move/\n(move_schedule)/]
-    api3[/POST /api/schedules/{id}/toggle/\n(toggle_schedule_status)/]
-    api4[/POST /api/schedules/{id}/delete/\n(delete_schedule)/]
-    api5[/POST /api/schedules/{id}/unschedule/\n(unschedule_job)/]
-    api6[/POST /api/schedules/create/\n(create_schedule_from_job)/]
-    api7[/GET /api/jobs/\n(jobs_json)/]
-    api8[/POST /api/jobs/{id}/delete/\n(delete_job_api)/]
-    api9[/POST /api/jobs/create/\n(create_job_and_schedule)/]
-    api10[/GET /api/clients/\n(clients_json)/]
+    api1["GET /api/schedules/<br/>schedules_json"]
+    api2["POST /api/schedules/{id}/move/<br/>move_schedule"]
+    api3["POST /api/schedules/{id}/toggle/<br/>toggle_schedule_status"]
+    api4["POST /api/schedules/{id}/delete/<br/>delete_schedule"]
+    api5["POST /api/schedules/{id}/unschedule/<br/>unschedule_job"]
+    api6["POST /api/schedules/create/<br/>create_schedule_from_job"]
+    api7["GET /api/jobs/<br/>jobs_json"]
+    api8["POST /api/jobs/{id}/delete/<br/>delete_job_api"]
+    api9["POST /api/jobs/create/<br/>create_job_and_schedule"]
+    api10["GET /api/clients/<br/>clients_json"]
   end
 
   views --- api1
