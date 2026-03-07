@@ -52,7 +52,7 @@ classDiagram
 flowchart LR
   browser[Browser]
   templates["Templates<br/>base.html<br/>home.html<br/>schedule.html<br/>..."]
-  urls_project["paragon_scheduler/urls.py<br/>\"/\" includes scheduler.urls"]
+  urls_project["paragon_scheduler/urls.py<br/>/ includes scheduler.urls"]
   urls_app["scheduler/urls.py"]
   views["scheduler/views.py"]
   models["scheduler/models.py<br/>Client, Job, Scheduler, UserProfile"]
